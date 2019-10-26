@@ -1,5 +1,8 @@
 # Micro 学习视频
 
+[B站](https://space.bilibili.com/478093818)
+[网易学堂]
+
 ## 基础篇
 
 顺序需要重排
@@ -25,3 +28,6 @@
 
 - [Go-Micro框架设计](https://www.bilibili.com/video/av73488208)
 - [Go-Micro开发实战]
+
+## 核心源码解读
+
