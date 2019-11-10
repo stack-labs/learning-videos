@@ -16,6 +16,7 @@
 - [Service] 
 - [Function] 
 - [Wrapper] 
+- [Selector]
 - [Timeout] 
 - [Registry] 
 - [Broker] 
