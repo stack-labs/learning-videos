@@ -48,7 +48,7 @@
 
 ## 第一个服务
 
-[tutorials](https://github.com/micro-in-cn/tutorials)
+[tutorials/examples/basic-practices/micro-service](https://github.com/micro-in-cn/tutorials/tree/master/examples/basic-practices/micro-service)
 
 ### Web Dashboard
 
