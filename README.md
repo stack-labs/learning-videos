@@ -5,22 +5,20 @@
 
 ## 基础篇
 
-顺序需要重排
-
-- [Hello World] 
-- [Micro API] 
-- [Client] 
-- [Config] 
-- [Web] 
-- [Sub-Pub] 
-- [Service] 
-- [Function] 
-- [Wrapper] 
+- [Hello World](https://www.bilibili.com/video/av75269275)
+- [Micro API]
+- [Client]
+- [Config]
+- [Web]
+- [Sub-Pub]
+- [Service]
+- [Function]
+- [Wrapper]
 - [Selector]
-- [Timeout] 
-- [Registry] 
-- [Broker] 
-- [CLI与Flag] 
+- [Timeout]
+- [Registry]
+- [Broker]
+- [CLI与Flag]
 - [gRpc]
 - [micro 初级指令]
 - [micro 高级指令]
@@ -31,4 +29,3 @@
 - [Go-Micro开发实战]
 
 ## 核心源码解读
-
