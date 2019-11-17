@@ -8,6 +8,7 @@
 - [Micro API 网关]
 - [api,srv,web 服务]
 - [web 服务集成 gin]
+- [stream, websocket, file]
 - [Config]
 - [Cli 与 Flag]
 - [Sub-Pub]
