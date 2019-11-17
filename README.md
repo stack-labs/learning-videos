@@ -1,27 +1,24 @@
 # Micro 学习视频
 
 [B站](https://space.bilibili.com/478093818)
-[网易学堂]
 
 ## 基础篇
 
 - [Hello World](https://www.bilibili.com/video/av75269275)
-- [Micro API]
-- [Client]
+- [Micro API 网关]
+- [api,srv,web 服务]
+- [web 服务集成 gin]
 - [Config]
-- [Web]
+- [Cli 与 Flag]
 - [Sub-Pub]
-- [Service]
 - [Function]
 - [Wrapper]
 - [Selector]
 - [Timeout]
 - [Registry]
-- [Broker]
-- [CLI与Flag]
 - [gRpc]
-- [micro 初级指令]
-- [micro 高级指令]
+- [plugin]
+- ...
 
 ## 进阶高级篇
 
