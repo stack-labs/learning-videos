@@ -18,7 +18,16 @@
 - [Wrapper] 
 - [Timeout] 
 - [Registry] 
+  - 服务的注册与发现
+  - Etcd/Consul
+  - MDNS
 - [Broker] 
+- [Transport]
+  - HTTP
+  - GRPC
+  - TCP
+  - UDP
+  - MQ：NATS
 - [CLI与Flag] 
 - [gRpc]
 - [micro 初级指令]
@@ -27,7 +36,7 @@
 ## 进阶高级篇
 
 - [Go-Micro框架设计](https://www.bilibili.com/video/av73488208)
-- [Go-Micro开发实战]
+- [Go-Micro开发实战](https://www.bilibili.com/video/av79978452)
 
 ## 核心源码解读
 
