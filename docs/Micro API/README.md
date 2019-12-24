@@ -15,7 +15,9 @@
 
 ## micro网关
 
-### API
+### 演示: 启动网关
+
+**API**
 
 > 前提已经安装micro工具，演示版本`1.18.0`
 
@@ -24,11 +26,11 @@ micro api
 ```
 
 ```bash
-curl localhost:8080                                                                                 
+curl http://localhost:8080                                                                                 
 {"version": "1.18.0"}
 ```
 
-### Web
+**Web**
 
 > 虽然定义的不是网关，但也可以作为网关使用
 
@@ -36,7 +38,7 @@ curl localhost:8080
 micro web
 ```
 
-访问服务:localhost:8082
+访问服务:http://localhost:8082
 
 ### Options
 
@@ -50,12 +52,6 @@ micro -h
 --enable_stats                  Enable stats [$MICRO_ENABLE_STATS]
 ```
 
-**registry**
-```bash
-micro --registry=etcd api
-micro --registry=etcd web
-```
-
 **command options**
 ```bash
 micro api -h
@@ -66,7 +62,15 @@ micro api -h
 --enable_rpc       Enable call the backend directly via /rpc [$MICRO_API_ENABLE_RPC]
 ```
 
-**address & namespace**
+#### 演示: options
+
+**global options --registry**
+```bash
+micro --registry=etcd api
+micro --registry=etcd web
+```
+
+**command options --address & --namespace**
 
 > 教程演示用例[micro-in-cn/tutorials/examples/basic-practices/micro-api](https://github.com/micro-in-cn/tutorials/tree/master/examples/basic-practices/micro-api)
 
@@ -84,10 +88,11 @@ go run meta.go --registry=etcd --server_name=com.hbchen.api.example
 curl -XGET "http://localhost:9080/example?name=john"
 curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:9080/example"
 ```
-
-### 路由
+### 服务发现
 
 <img src="/docs/Micro API/img/micro-ds.png" width="50%">
+
+### 路由
 
 <details>
   <summary> 默认网关 </summary>
@@ -124,7 +129,9 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 4 | web | 与http差不多，但是支持websocket
 5 | event | 代理event事件服务类型的请求
 6 | meta* | 默认值，元数据，通过在代码中的`Endpoint`配置选择使用上述中的某一个处理器，默认RPC
-	
+
+#### 演示: API Handler
+
 ```bash
 micro --registry=etcd api --handler=api
 
@@ -191,6 +198,8 @@ func main() {
 
 </details>
 
+#### 演示: Registry&Transport
+
 ```bash
  go build -o bin/micro_01 main_01.go
 ```
@@ -211,6 +220,16 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 ### plugin
 
+- 跨域
+- 认证鉴权
+- 监控
+- 限流
+- 链路追踪
+- 日志
+- 流量染色
+_ ……
+
+**plugin接口**
 ```go
 type Plugin interface {
 	// Global Flags
@@ -227,17 +246,6 @@ type Plugin interface {
 	String() string
 }
 ```
-
-- 跨域
-- 认证鉴权
-- 监控
-- 限流
-- 链路追踪
-- 日志
-- 流量染色
-_ ……
-
-#### Metrics
 
 <details>
   <summary> Wrap ResponseWriter </summary>
@@ -263,6 +271,8 @@ func (ww *WrapWriter) WriteHeader(statusCode int) {
   
 </details>
 
+#### 演示: Metrics
+
 ```bash
 go build -o bin/micro_02 main_02.go
 ```
@@ -271,7 +281,7 @@ go build -o bin/micro_02 main_02.go
 ./bin/micro_02 --registry=consul --transport=tcp api
 ```
 
-访问服务:localhost:8080/metrics
+访问服务:http://localhost:8080/metrics
 
 做些访问数据，再看`metrics`结果
 ```bash
