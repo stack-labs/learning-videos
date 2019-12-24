@@ -140,8 +140,8 @@ go run api.go --registry=etcd
 ```
 
 ```bash
-curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
+curl -XGET "http://localhost:8080/example/call?name=john"
+curl -XPOST -H 'Content-Type: application/json' -d '{data:123}' http://localhost:8080/example/foo/bar
 ```
 
 ```bash
@@ -152,8 +152,8 @@ go run proxy.go --registry=etcd
 ```
 
 ```bash
-curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
+curl -XGET "http://localhost:8080/example/call?name=john"
+curl -H 'Content-Type: application/json' -d '{"name": "john"}' http://localhost:8080/example/foo/bar
 ```
 
 ## 自定义网关
