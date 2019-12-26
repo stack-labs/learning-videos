@@ -11,11 +11,11 @@
 
 ## 微服务架构-网关
 
-<img src="/docs/Micro API/img/micro-arch.png" width="50%">
+<img src="/docs/Micro API/img/micro-arch.png" width="75%">
 
 ## micro网关
 
-### 演示: 启动网关
+#### 演示: 启动网关
 
 **API**
 
@@ -49,7 +49,6 @@ micro -h
 --registry_address value        Comma-separated list of registry addresses [$MICRO_REGISTRY_ADDRESS]
 --server_name value             Name of the server. go.micro.srv.example [$MICRO_SERVER_NAME]
 --transport value               Transport mechanism used; http [$MICRO_TRANSPORT]
---enable_stats                  Enable stats [$MICRO_ENABLE_STATS]
 ```
 
 **command options**
@@ -60,6 +59,12 @@ micro api -h
 --namespace value  Set the namespace used by the API e.g. com.example.api [$MICRO_API_NAMESPACE]
 --resolver value   Set the hostname resolver used by the API {host, path, grpc} [$MICRO_API_RESOLVER]
 --enable_rpc       Enable call the backend directly via /rpc [$MICRO_API_ENABLE_RPC]
+```
+
+```bash
+micro web -h
+--address value    Set the web UI address e.g 0.0.0.0:8082 [$MICRO_WEB_ADDRESS]
+--namespace value  Set the namespace used by the Web proxy e.g. com.example.web [$MICRO_WEB_NAMESPACE]
 ```
 
 #### 演示: options
@@ -88,11 +93,60 @@ go run meta.go --registry=etcd --server_name=com.hbchen.api.example
 curl -XGET "http://localhost:9080/example?name=john"
 curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:9080/example"
 ```
+
 ### 服务发现
 
-<img src="/docs/Micro API/img/micro-ds.png" width="50%">
+> 自定义`namespace`适合启动不同类型的`API`
+
+<img src="/docs/Micro API/img/micro-ds.png" width="75%">
 
 ### 路由
+
+**Handler**
+
+| - | 类型 | 说明
+----|----|----
+1 | rpc | 通过RPC向go-micro应用转送请求，只接收GET和POST请求，GET转发`RawQuery`，POST转发`Body`
+2 | api | 与rpc差不多，但是会把完整的http头封装向下传送，不限制请求方法
+3 | http或proxy | 以反向代理的方式使用**API**，相当于把普通的web应用部署在**API**之后，让外界像调api接口一样调用web服务
+4 | web | 与http差不多，但是支持websocket
+5 | event | 代理event事件服务类型的请求
+6 | meta* | 默认值，元数据，通过在代码中的`Endpoint`配置选择使用上述中的某一个处理器，默认RPC
+
+- `rpc`或`api`模式同样可以使用`Endpoint`定义路由。
+
+<img src="/docs/Micro API/img/micro-router.png" width="75%">
+
+- router过程
+	- endpoint
+		- 自定义路由
+	- resolver
+		- 路径规则
+
+**Resolver**
+
+请求路径    |    后台服务    |    接口方法
+----    |    ----    |    ----
+/foo/bar    |    go.micro.api.foo    |    Foo.Bar
+/foo/bar/baz    |    go.micro.api.foo    |    Bar.Baz
+/foo/bar/baz/cat    |    go.micro.api.foo.bar    |    Baz.Cat
+/v1/foo/bar    |    go.micro.api.v1.foo    |    Foo.Bar
+/v1/foo/bar/baz    |    go.micro.api.v1.foo    |    Bar.Baz
+/v2/foo/bar    |    go.micro.api.v2.foo    |    Foo.Bar
+/v2/foo/bar/baz    |    go.micro.api.v2.foo    |    Bar.Baz
+
+
+`proxy`只需要服务名称，用于服务发现，将http请求转发到对应的服务
+
+请求路径    |    服务    |    后台服务路径
+---    |    ---    |    ---
+/foo    |   go.micro.api.foo	|   /foo
+/foo/bar	|   go.micro.api.foo	|   /foo/bar
+/greeter    |    go.micro.api.greeter    |    /greeter
+/greeter/:name    |    go.micro.api.greeter    |    /greeter/:name
+
+
+#### 演示: API Handler
 
 <details>
   <summary> 默认网关 </summary>
@@ -111,27 +165,7 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 </details>
 
-- router过程
-	- endpoint
-		- 自定义路由
-	- resolver
-		- request -> endpoint Name & Method（）
-	- registry
-		- services
-
-**Handler**
-
-| - | 类型 | 说明
-----|----|----
-1 | rpc | 通过RPC向go-micro应用转送请求，只接收GET和POST请求，GET转发`RawQuery`，POST转发`Body`
-2 | api | 与rpc差不多，但是会把完整的http头封装向下传送，不限制请求方法
-3 | http或proxy | 以反向代理的方式使用**API**，相当于把普通的web应用部署在**API**之后，让外界像调api接口一样调用web服务
-4 | web | 与http差不多，但是支持websocket
-5 | event | 代理event事件服务类型的请求
-6 | meta* | 默认值，元数据，通过在代码中的`Endpoint`配置选择使用上述中的某一个处理器，默认RPC
-
-#### 演示: API Handler
-
+**--handler=api**
 ```bash
 micro --registry=etcd api --handler=api
 
@@ -144,6 +178,8 @@ curl -XGET "http://localhost:8080/example/call?name=john"
 curl -XPOST -H 'Content-Type: application/json' -d '{data:123}' http://localhost:8080/example/foo/bar
 ```
 
+
+**--handler=proxy**
 ```bash
 micro --registry=etcd api --handler=proxy
 
@@ -219,6 +255,8 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 ```
 
 ### plugin
+
+plugin是使用网关的关键，类似各种web框架的中间件，通过`HTTP`请求上下文的前置、后置处理实现拦截、装饰等各种场景的需求，如：
 
 - 跨域
 - 认证鉴权
