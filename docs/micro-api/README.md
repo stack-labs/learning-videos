@@ -11,11 +11,13 @@
 
 ## 微服务架构-网关
 
-<img src="/docs/Micro API/img/micro-arch.png" width="50%">
+<img src="/docs/Micro API/img/micro-arch.png" width="75%">
 
 ## micro网关
 
-### API
+#### 演示: 启动网关
+
+**API**
 
 > 前提已经安装micro工具，演示版本`1.18.0`
 
@@ -24,11 +26,11 @@ micro api
 ```
 
 ```bash
-curl localhost:8080                                                                                 
+curl http://localhost:8080                                                                                 
 {"version": "1.18.0"}
 ```
 
-### Web
+**Web**
 
 > 虽然定义的不是网关，但也可以作为网关使用
 
@@ -36,7 +38,7 @@ curl localhost:8080
 micro web
 ```
 
-访问服务:localhost:8082
+访问服务:http://localhost:8082
 
 ### Options
 
@@ -47,13 +49,6 @@ micro -h
 --registry_address value        Comma-separated list of registry addresses [$MICRO_REGISTRY_ADDRESS]
 --server_name value             Name of the server. go.micro.srv.example [$MICRO_SERVER_NAME]
 --transport value               Transport mechanism used; http [$MICRO_TRANSPORT]
---enable_stats                  Enable stats [$MICRO_ENABLE_STATS]
-```
-
-**registry**
-```bash
-micro --registry=etcd api
-micro --registry=etcd web
 ```
 
 **command options**
@@ -66,7 +61,23 @@ micro api -h
 --enable_rpc       Enable call the backend directly via /rpc [$MICRO_API_ENABLE_RPC]
 ```
 
-**address & namespace**
+> 有关`handler`、`resolver`、`rpc`的介绍参考官方文档：[API Gateway](https://micro.mu/docs/api.html#handlers)
+
+```bash
+micro web -h
+--address value    Set the web UI address e.g 0.0.0.0:8082 [$MICRO_WEB_ADDRESS]
+--namespace value  Set the namespace used by the Web proxy e.g. com.example.web [$MICRO_WEB_NAMESPACE]
+```
+
+#### 演示: options
+
+**global options --registry**
+```bash
+micro --registry=etcd api
+micro --registry=etcd web
+```
+
+**command options --address & --namespace**
 
 > 教程演示用例[micro-in-cn/tutorials/examples/basic-practices/micro-api](https://github.com/micro-in-cn/tutorials/tree/master/examples/basic-practices/micro-api)
 
@@ -85,9 +96,61 @@ curl -XGET "http://localhost:9080/example?name=john"
 curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:9080/example"
 ```
 
+### 服务发现
+
+> 自定义`namespace`适合启动不同类型的`API`
+
+<img src="/docs/Micro API/img/micro-ds.png" width="75%">
+
 ### 路由
 
-<img src="/docs/Micro API/img/micro-ds.png" width="50%">
+**Handler**
+
+| - | 类型 | 说明
+----|----|----
+1 | rpc | 通过RPC向go-micro应用转送请求，只接收GET和POST请求，GET转发`RawQuery`，POST转发`Body`
+2 | api | 与rpc差不多，但是会把完整的http头封装向下传送，不限制请求方法
+3 | http或proxy | 以反向代理的方式使用**API**，相当于把普通的web应用部署在**API**之后，让外界像调api接口一样调用web服务
+4 | web | 与http差不多，但是支持websocket
+5 | event | 代理event事件服务类型的请求
+6 | meta* | 默认值，元数据，通过在代码中的`Endpoint`配置选择使用上述中的某一个处理器，默认RPC
+
+- `rpc`或`api`模式同样可以使用`Endpoint`定义路由。
+
+<img src="/docs/Micro API/img/micro-router.png" width="75%">
+
+- router过程
+	- endpoint
+		- 自定义路由
+	- resolver
+		- 路径规则
+
+**Resolver**
+
+`rpc`需要服务名称`go.micro.api.greeter` + 方法名`Greeter.Hello`
+
+请求路径    |    后台服务    |    接口方法
+----    |    ----    |    ----
+/foo/bar    |    go.micro.api.foo    |    Foo.Bar
+/foo/bar/baz    |    go.micro.api.foo    |    Bar.Baz
+/foo/bar/baz/cat    |    go.micro.api.foo.bar    |    Baz.Cat
+/v1/foo/bar    |    go.micro.api.v1.foo    |    Foo.Bar
+/v1/foo/bar/baz    |    go.micro.api.v1.foo    |    Bar.Baz
+/v2/foo/bar    |    go.micro.api.v2.foo    |    Foo.Bar
+/v2/foo/bar/baz    |    go.micro.api.v2.foo    |    Bar.Baz
+
+
+`proxy`只需要服务名称，用于服务发现，将http请求转发到对应的服务
+
+请求路径    |    服务    |    后台服务路径
+---    |    ---    |    ---
+/foo    |   go.micro.api.foo	|   /foo
+/foo/bar	|   go.micro.api.foo	|   /foo/bar
+/greeter    |    go.micro.api.greeter    |    /greeter
+/greeter/:name    |    go.micro.api.greeter    |    /greeter/:name
+
+
+#### 演示: API Handler
 
 <details>
   <summary> 默认网关 </summary>
@@ -106,25 +169,7 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 </details>
 
-- router过程
-	- endpoint
-		- 自定义路由
-	- resolver
-		- request -> endpoint Name & Method（）
-	- registry
-		- services
-
-**Handler**
-
-| - | 类型 | 说明
-----|----|----
-1 | rpc | 通过RPC向go-micro应用转送请求，只接收GET和POST请求，GET转发`RawQuery`，POST转发`Body`
-2 | api | 与rpc差不多，但是会把完整的http头封装向下传送，不限制请求方法
-3 | http或proxy | 以反向代理的方式使用**API**，相当于把普通的web应用部署在**API**之后，让外界像调api接口一样调用web服务
-4 | web | 与http差不多，但是支持websocket
-5 | event | 代理event事件服务类型的请求
-6 | meta* | 默认值，元数据，通过在代码中的`Endpoint`配置选择使用上述中的某一个处理器，默认RPC
-	
+**--handler=api**
 ```bash
 micro --registry=etcd api --handler=api
 
@@ -133,10 +178,12 @@ go run api.go --registry=etcd
 ```
 
 ```bash
-curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
+curl -XGET "http://localhost:8080/example/call?name=john"
+curl -XPOST -H 'Content-Type: application/json' -d '{data:123}' http://localhost:8080/example/foo/bar
 ```
 
+
+**--handler=proxy**
 ```bash
 micro --registry=etcd api --handler=proxy
 
@@ -145,8 +192,8 @@ go run proxy.go --registry=etcd
 ```
 
 ```bash
-curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
+curl -XGET "http://localhost:8080/example/call?name=john"
+curl -H 'Content-Type: application/json' -d '{"name": "john"}' http://localhost:8080/example/foo/bar
 ```
 
 ## 自定义网关
@@ -191,6 +238,8 @@ func main() {
 
 </details>
 
+#### 演示: Registry&Transport
+
 ```bash
  go build -o bin/micro_01 main_01.go
 ```
@@ -211,6 +260,18 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 ### plugin
 
+plugin是使用网关的关键，类似各种web框架的中间件，通过`HTTP`请求上下文的前置、后置处理实现拦截、装饰等各种场景的需求，如：
+
+- 跨域
+- 认证鉴权
+- 监控
+- 限流
+- 链路追踪
+- 日志
+- 流量染色
+_ ……
+
+**plugin接口**
 ```go
 type Plugin interface {
 	// Global Flags
@@ -227,17 +288,6 @@ type Plugin interface {
 	String() string
 }
 ```
-
-- 跨域
-- 认证鉴权
-- 监控
-- 限流
-- 链路追踪
-- 日志
-- 流量染色
-_ ……
-
-#### Metrics
 
 <details>
   <summary> Wrap ResponseWriter </summary>
@@ -263,6 +313,8 @@ func (ww *WrapWriter) WriteHeader(statusCode int) {
   
 </details>
 
+#### 演示: Metrics
+
 ```bash
 go build -o bin/micro_02 main_02.go
 ```
@@ -271,7 +323,7 @@ go build -o bin/micro_02 main_02.go
 ./bin/micro_02 --registry=consul --transport=tcp api
 ```
 
-访问服务:localhost:8080/metrics
+访问服务:http://localhost:8080/metrics
 
 做些访问数据，再看`metrics`结果
 ```bash

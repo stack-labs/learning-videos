@@ -48,9 +48,6 @@ func init() {
 			}),
 			plugin.WithCommand(),
 			plugin.WithHandler(func(h http.Handler) http.Handler {
-				if disable {
-
-				}
 				md := make(map[string]string)
 
 				reqTotalCounter := prometheus.NewCounterVec(
@@ -75,6 +72,11 @@ func init() {
 				prometheus.DefaultRegisterer = wrapreg
 
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if disable {
+						h.ServeHTTP(w, r)
+						return
+					}
+
 					// 拦截metrics path，默认"/metrics"
 					if r.URL.Path == "/metrics" {
 						promhttp.Handler().ServeHTTP(w, r)
