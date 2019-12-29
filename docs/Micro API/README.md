@@ -61,6 +61,8 @@ micro api -h
 --enable_rpc       Enable call the backend directly via /rpc [$MICRO_API_ENABLE_RPC]
 ```
 
+> 有关`handler`、`resolver`、`rpc`的介绍参考官方文档：[API Gateway](https://micro.mu/docs/api.html#handlers)
+
 ```bash
 micro web -h
 --address value    Set the web UI address e.g 0.0.0.0:8082 [$MICRO_WEB_ADDRESS]
@@ -124,6 +126,8 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 		- 路径规则
 
 **Resolver**
+
+`rpc`需要服务名称`go.micro.api.greeter` + 方法名`Greeter.Hello`
 
 请求路径    |    后台服务    |    接口方法
 ----    |    ----    |    ----
