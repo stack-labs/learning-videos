@@ -11,7 +11,7 @@
 
 ## 微服务架构-网关
 
-<img src="/docs/Micro API/img/micro-arch.png" width="75%">
+<img src="/docs/micro-api/img/micro-arch.png" width="75%">
 
 ## micro网关
 
@@ -100,7 +100,7 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 > 自定义`namespace`适合启动不同类型的`API`
 
-<img src="/docs/Micro API/img/micro-ds.png" width="75%">
+<img src="/docs/micro-api/img/micro-ds.png" width="75%">
 
 ### 路由
 
@@ -117,7 +117,7 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 - `rpc`或`api`模式同样可以使用`Endpoint`定义路由。
 
-<img src="/docs/Micro API/img/micro-router.png" width="75%">
+<img src="/docs/micro-api/img/micro-router.png" width="75%">
 
 - router过程
 	- endpoint
