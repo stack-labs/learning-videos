@@ -42,6 +42,12 @@ micro web
 
 ### Options
 
+**`micro`命令行格式**
+```bash
+micro -h
+micro [global options] command [command options] [arguments...]
+```
+
 **global options**
 ```bash
 micro -h
@@ -79,32 +85,37 @@ micro --registry=etcd web
 
 **command options --address & --namespace**
 
-> 教程演示用例[micro-in-cn/tutorials/examples/basic-practices/micro-api](https://github.com/micro-in-cn/tutorials/tree/master/examples/basic-practices/micro-api)
+> 为了演示方便，这里使用中国社区教程([micro-in-cn/tutorials](https://github.com/micro-in-cn/tutorials))的[micro-api示例](https://github.com/micro-in-cn/tutorials/tree/master/examples/basic-practices/micro-api))
 
 ```bash
 micro --registry=etcd api --address=:9080 --namespace=com.hbchen.api
-
-# micro-in-cn/tutorials/examples/basic-practices/micro-api/meta
-# 错误示范，不指定server_name，
-go run meta.go --registry=etcd
-# 正确示范
-go run meta.go --registry=etcd --server_name=com.hbchen.api.example
 ```
 
+错误示范，不指定server_name
 ```bash
+# micro-in-cn/tutorials/examples/basic-practices/micro-api/meta
+go run meta.go --registry=etcd
+
 curl -XGET "http://localhost:9080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:9080/example"
+{"id":"com.hbchen.api","code":500,"detail":"service not found","status":"Internal Server Error"}
+```
+
+正确示范
+```bash
+# micro-in-cn/tutorials/examples/basic-practices/micro-api/meta
+go run meta.go --registry=etcd --server_name=com.hbchen.api.example
+
+curl -XGET "http://localhost:9080/example?name=john"
+{"message":"Meta已经收到你的请求，john"}
 ```
 
 ### 服务发现
 
-> 自定义`namespace`适合启动不同类型的`API`
+通过`server_name`和`namespace`可以定义不同类型的网关，负载通过`server_name`筛选API网关，网关通过`namespace`筛选API服务
 
 <img src="/docs/micro-api/img/micro-ds.png" width="75%">
 
-### 路由
-
-**Handler**
+### Handler处理器
 
 | - | 类型 | 说明
 ----|----|----
@@ -117,6 +128,21 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 
 - `rpc`或`api`模式同样可以使用`Endpoint`定义路由。
 
+```go
+api.Endpoint{
+	// 接口方法，一定要在proto接口中存在，不能是类的自有方法
+	Name: "Example.Call",
+	// http请求路由，支持POSIX风格
+	Path: []string{"/example"},
+	// 支持的方法类型
+	Method: []string{"POST", "GET"},
+	// 该接口使用的API转发模式
+	Handler: rpc.Handler,
+}
+```
+
+### Router路由
+
 <img src="/docs/micro-api/img/micro-router.png" width="75%">
 
 - router过程
@@ -125,9 +151,11 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 	- resolver
 		- 路径规则
 
-**Resolver**
+### Resolver请求映射
 
-`rpc`需要服务名称`go.micro.api.greeter` + 方法名`Greeter.Hello`
+> 这里的Resolver类型都是`micro`中默认的`go-micro/api/resolver/micro`
+
+`rpc`类型需要服务名称`go.micro.api.greeter` + 方法名`Greeter.Hello`
 
 请求路径    |    后台服务    |    接口方法
 ----    |    ----    |    ----
@@ -140,7 +168,7 @@ curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://lo
 /v2/foo/bar/baz    |    go.micro.api.v2.foo    |    Bar.Baz
 
 
-`proxy`只需要服务名称，用于服务发现，将http请求转发到对应的服务
+`proxy`类型只需要服务名称，用于服务发现，将http请求转发到对应的服务
 
 请求路径    |    服务    |    后台服务路径
 ---    |    ---    |    ---
@@ -164,7 +192,6 @@ go run meta.go --registry=etcd
 
 ```bash
 curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
 ```
 
 </details>
@@ -179,9 +206,7 @@ go run api.go --registry=etcd
 
 ```bash
 curl -XGET "http://localhost:8080/example/call?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{data:123}' http://localhost:8080/example/foo/bar
 ```
-
 
 **--handler=proxy**
 ```bash
@@ -193,19 +218,20 @@ go run proxy.go --registry=etcd
 
 ```bash
 curl -XGET "http://localhost:8080/example/call?name=john"
-curl -H 'Content-Type: application/json' -d '{"name": "john"}' http://localhost:8080/example/foo/bar
 ```
 
 ## 自定义网关
 
 - import
+	- `micro`的上下文插件，以及`go-micro`的可插拔组件
 	- 适合简单定制，如go-micro组件、增加插件，参考[micro-in-cn/starter-kit/gateway](https://github.com/micro-in-cn/starter-kit/tree/master/gateway)
 - fork
-	- 需要修改网关源码
+	- 二次开发，需要修改网关源码
 	
 > 不管需求大小都建议在项目中自己编译`micro`工具，确保开发、生产等环境一致
 
-> 以下示例在[Micro API/example](/docs/Micro%20API/example)：`main_01.go`、`main_02.go`
+> 以下示例在本文档的[example目录](/docs/micro-api/example)：`main_01.go`、`main_02.go`
+
 ### go-micro组件
 
 - registry
@@ -255,7 +281,6 @@ go run meta.go --registry=consul --transport=tcp
 
 ```bash
 curl -XGET "http://localhost:8080/example?name=john"
-curl -XPOST -H 'Content-Type: application/json' -d '{"name": "john"}' "http://localhost:8080/example"
 ```
 
 ### plugin
@@ -319,6 +344,13 @@ func (ww *WrapWriter) WriteHeader(statusCode int) {
 go build -o bin/micro_02 main_02.go
 ```
 
+```bash
+bin/micro_02 api -h
+
+# 多了自定义插件的flag
+--metrics_disable  disable metrics
+```
+
 ```go
 ./bin/micro_02 --registry=consul --transport=tcp api
 ```
@@ -333,5 +365,19 @@ curl -XGET "http://localhost:8080/example?name=john"
 ……
 
 # 或
-hey -z 10s -c 1 "http://localhost:8080/example?name=john"
+hey -z 5s -c 1 "http://localhost:8080/example?name=john"
+```
+
+```bash
+./bin/micro_02 --registry=consul --transport=tcp api --metrics_disable
+```
+
+访问服务:http://localhost:8080/metrics
+```json
+{
+"id": "go.micro.api",
+"code": 500,
+"detail": "service not found",
+"status": "Internal Server Error"
+}
 ```
