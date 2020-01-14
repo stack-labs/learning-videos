@@ -80,7 +80,6 @@ micro web -h
 **global options --registry**
 ```bash
 micro --registry=etcd api
-micro --registry=etcd web
 ```
 
 **command options --address & --namespace**
