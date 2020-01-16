@@ -7,7 +7,7 @@
 特性或功能|主要内容|文件地址|视频地址|---
 ---|---|---|---|---
 Hello World|简单入门|[文档](./docs/hello-world)|[B站](https://www.bilibili.com/video/av75269275)|---
-Micro API|API网关|[文档](./docs/micro-api)|-|---
+Micro API|API网关|[文档](./docs/micro-api)|[B站](https://www.bilibili.com/video/av83421378)|---
 Client|-|[文档](./docs/client)|-|---
 Config|-||-|---
 Codec|-||-|---
